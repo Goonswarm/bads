@@ -1,0 +1,1 @@
+%{"mysql": {:git, "https://github.com/mysql-otp/mysql-otp", "c68855c8f37f4bd844a9210de36977b306bbd5f8", [tag: "1.1.1"]}}
