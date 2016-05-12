@@ -18,20 +18,28 @@ defmodule BADS.Groups do
     # Start a timer
     :erlang.send_after(interval, self(), :update)
 
-    {:ok, config}
+    # Connect to LDAP
+    {:ok, conn} = LDAP.connect
+
+    state = %{
+      interval: interval,
+      ldap_conn: conn,
+      groups: config[:groups]
+    }
+
+    {:ok, state}
   end
 
-  def handle_info(:update, config) do
+  def handle_info(:update, state) do
     # Restart timer. GenServer is synchronous so it won't be running twice even
     # in case of execution delays.
-    interval = config[:interval] * 1000
-    :erlang.send_after(interval, self(), :update)
+    :erlang.send_after(state[:interval], self(), :update)
 
     # Do things
-    groups = get_groups
-    update_groups(groups, config[:groups])
+    groups = get_groups(state[:ldap_conn])
+    update_groups(groups, state[:groups])
 
-    {:noreply, config}
+    {:noreply, state}
   end
 
   ## Private functions for phpBB database
@@ -109,15 +117,13 @@ defmodule BADS.Groups do
 
   ## Private functions for LDAP
 
-  @doc "Fetch a group from LDAP"
-  def get_group do
-    {:ok, conn} = LDAP.connect
+  @doc "Fetch all groups from LDAP"
+  def get_groups(conn) do
     search = [base: LDAP.base_dn(:groups),
               filter: :eldap.equalityMatch('objectClass', 'groupOfNames'),
               scope: :eldap.singleLevel,
               attributes: ['cn', 'member']]
     {:ok, result} = :eldap.search(conn, search)
-    :eldap.close(conn)
 
     case result do
       {:eldap_search_result, entries, _something} -> parse_groups(entries)
