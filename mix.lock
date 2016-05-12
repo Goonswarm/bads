@@ -1,1 +1,8 @@
-%{"mysql": {:git, "https://github.com/mysql-otp/mysql-otp", "c68855c8f37f4bd844a9210de36977b306bbd5f8", [tag: "1.1.1"]}}
+%{"bbmustache": {:hex, :bbmustache, "1.0.4"},
+  "cf": {:hex, :cf, "0.2.1"},
+  "erlware_commons": {:hex, :erlware_commons, "0.19.0"},
+  "exrm": {:hex, :exrm, "1.0.4"},
+  "getopt": {:hex, :getopt, "0.8.2"},
+  "mysql": {:git, "https://github.com/mysql-otp/mysql-otp", "20e258371b716beedb138aa516d0e7bd71a97b4f", [ref: "20e258371"]},
+  "providers": {:hex, :providers, "1.6.0"},
+  "relx": {:hex, :relx, "3.19.0"}}
