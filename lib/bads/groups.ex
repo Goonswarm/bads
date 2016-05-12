@@ -45,7 +45,12 @@ defmodule BADS.Groups do
   ## Private functions for phpBB database
   @doc "Find the phpBB user ID for a user"
   def get_user_id(username) do
-    query = "SELECT user_id FROM phpbb_users WHERE username = ?"
+    query = """
+    SELECT user_id
+    FROM phpbb_users
+    WHERE username = CONVERT(? USING utf8)
+    COLLATE utf8_general_ci
+    """
     case :mysql.query(:phpbb_db, query, [username]) do
       {:ok, ["user_id"], []} -> :not_found
       {:ok, ["user_id"], [[user_id]]} -> {:ok, username, user_id}
@@ -64,14 +69,14 @@ defmodule BADS.Groups do
   @doc "Get all current members of a group in phpBB"
   def phpbb_group_members(group) do
     query = """
-    SELECT u.username
+    SELECT LOWER(u.username)
     FROM phpbb_user_group AS ug
       JOIN phpbb_users AS u ON ug.user_id = u.user_id
       JOIN phpbb_groups AS g ON ug.group_id = g.group_id
     WHERE g.group_name = ?
     """
 
-    {:ok, ["username"], users} = :mysql.query(:phpbb_db, query, [group])
+    {:ok, _col, users} = :mysql.query(:phpbb_db, query, [group])
     users
     |> Enum.map(fn([user]) -> user end)
   end
@@ -147,7 +152,10 @@ defmodule BADS.Groups do
     parse_member = fn(member) ->
       member = List.to_string(member)
       <<"cn=", member :: binary>> = member
-      member |> String.split(",") |> hd
+      member
+      |> String.split(",")
+      |> List.first
+      |> String.downcase
     end
     {:member, Enum.map(members, parse_member)}
   end
@@ -164,7 +172,7 @@ defmodule BADS.Groups do
 
   @def "Updates a single group"
   def update_group(group) do
-    Logger.info("[phpbb] Checking group #{group[:cn]}")
+    Logger.debug("[phpbb] Checking group #{group[:cn]}")
     phpbb_members = phpbb_group_members(group[:cn])
 
     # Calculate list diffs
