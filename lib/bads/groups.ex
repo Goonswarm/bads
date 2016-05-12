@@ -15,11 +15,11 @@ defmodule BADS.Groups do
     Logger.info("Starting group synchronisation process")
     interval = config[:interval] * 1000
 
-    # Start a timer
-    :erlang.send_after(interval, self(), :update)
-
     # Connect to LDAP
     {:ok, conn} = LDAP.connect
+
+    # Start a timer
+    :erlang.send_after(5000, self(), :update)
 
     state = %{
       interval: interval,

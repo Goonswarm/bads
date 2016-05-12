@@ -11,7 +11,7 @@ defmodule BADS.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :mysql],
+    [applications: [:logger, :mysql, :eldap, :crypto, :asn1],
      mod: {BADS, []}]
   end
 
