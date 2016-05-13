@@ -36,15 +36,15 @@ defmodule BADS.Groups do
     :erlang.send_after(state[:interval], self(), :update)
 
     # Do things
-    groups = get_groups(state[:ldap_conn])
-    update_groups(groups, state[:groups])
+    groups = ldap_get_groups(state[:ldap_conn])
+    phpbb_update_groups(groups, state[:groups])
 
     {:noreply, state}
   end
 
   ## Private functions for phpBB database
   @doc "Find the phpBB user ID for a user"
-  def get_user_id(username) do
+  def ldap_user_id(username) do
     query = """
     SELECT user_id
     FROM phpbb_users
@@ -58,7 +58,7 @@ defmodule BADS.Groups do
   end
 
   @doc "Find the phpBB group ID for a group"
-  def get_group_id(group) do
+  def phpbb_group_id(group) do
     query = "SELECT group_id FROM phpbb_groups WHERE group_name = ?"
     case :mysql.query(:phpbb_db, query, [group]) do
       {:ok, ["group_id"], []} -> :not_found
@@ -82,17 +82,17 @@ defmodule BADS.Groups do
   end
 
   @doc "Retrieve the IDs for several users at once, filter non-existing ones"
-  def get_user_ids(users) do
+  def ldap_user_ids(users) do
     users
-    |> Enum.map(&(get_user_id(&1)))
+    |> Enum.map(&(ldap_user_id(&1)))
     |> Enum.filter_map(&(&1 != :not_found), fn({:ok, user, uid}) ->
       {user, uid} end)
   end
 
   @doc "Add some users to a group"
   def phpbb_add_members(group, members) do
-    {:ok, gid} = get_group_id(group)
-    members = get_user_ids(members)
+    {:ok, gid} = phpbb_group_id(group)
+    members = ldap_user_ids(members)
     query = """
     INSERT INTO phpbb_user_group
     VALUES (?, ?, ?, ?)
@@ -106,8 +106,8 @@ defmodule BADS.Groups do
 
   @doc "Remove some users from a group"
   def phpbb_remove_members(group, members) do
-    {:ok, gid} = get_group_id(group)
-    members = get_user_ids(members)
+    {:ok, gid} = phpbb_group_id(group)
+    members = ldap_user_ids(members)
     query = """
     DELETE FROM phpbb_user_group
     WHERE group_id = ?
@@ -123,7 +123,7 @@ defmodule BADS.Groups do
   ## Private functions for LDAP
 
   @doc "Fetch all groups from LDAP"
-  def get_groups(conn) do
+  def ldap_get_groups(conn) do
     search = [base: LDAP.base_dn(:groups),
               filter: :eldap.equalityMatch('objectClass', 'groupOfNames'),
               scope: :eldap.wholeSubtree,
@@ -131,12 +131,12 @@ defmodule BADS.Groups do
     {:ok, result} = :eldap.search(conn, search)
 
     case result do
-      {:eldap_search_result, entries, _something} -> parse_groups(entries)
+      {:eldap_search_result, entries, _something} -> parse_ldap_groups(entries)
     end
   end
 
   @doc "Parses LDAP groups into a nice data structure"
-  def parse_groups(entries) do
+  def parse_ldap_groups(entries) do
     Enum.map(entries, fn({:eldap_entry, _dn, attributes}) ->
       attributes
       |> Enum.map(&(clean_group_attribute &1))
@@ -163,15 +163,15 @@ defmodule BADS.Groups do
   ## Private functions for logic
 
   @def "Filters to the groups specified in configuration and updates MariaDB"
-  def update_groups(groups, filters) do
+  def phpbb_update_groups(groups, filters) do
     import Enum
     groups
     |> filter(&(member?(filters, &1[:cn])))
-    |> Enum.map(&(update_group &1))
+    |> Enum.map(&(phpbb_update_group &1))
   end
 
   @def "Updates a single group"
-  def update_group(group) do
+  def phpbb_update_group(group) do
     Logger.debug("[phpbb] Checking group #{group[:cn]}")
     phpbb_members = phpbb_group_members(group[:cn])
 
