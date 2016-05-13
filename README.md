@@ -19,7 +19,7 @@ configuration file, on every tick it does the following:
 ## Overview - phpBB sync
 
 1. Fetch all groups and their members from LDAP
-2. Filter out groups that aren't specified in the config file
+2. Filter out groups that aren't found in phpBB
 3. Fetch members for the correlating phpBB group
 4. Find differences and make the necessary changes in the database
 
@@ -54,7 +54,5 @@ config :bads, :phpbb,
   user: 'phpbb',
   keepalive: true,
   password: 'TrumpForPresident2016',
-  name: {:local, :phpbb_db},
-  # Which groups to sync to LDAP
-  groups: ["admin", "it"]
+  name: {:local, :phpbb_db}
 ```
