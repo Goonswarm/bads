@@ -35,9 +35,12 @@ defmodule BADS.Groups do
     # in case of execution delays.
     :erlang.send_after(state[:interval], self(), :update)
 
+    # Fetch current groups from phpBB
+    {:ok, filters} = phpbb_get_groups
+
     # Do things
     groups = ldap_get_groups(state[:ldap_conn])
-    update_groups(groups, state[:groups])
+    update_groups(groups, filters)
 
     {:noreply, state}
   end
@@ -49,6 +52,18 @@ defmodule BADS.Groups do
     case :mysql.query(:phpbb_db, query, [group]) do
       {:ok, ["group_id"], []} -> :not_found
       {:ok, ["group_id"], [[group_id]]} -> {:ok, group_id}
+    end
+  end
+
+  @doc "Retrieve all phpBB groups"
+  def phpbb_get_groups do
+    query = "SELECT group_name FROM phpbb_groups WHERE group_type != 3"
+
+    case :mysql.query(:phpbb_db, query, []) do
+      {:ok, ["group_name"], groups} ->
+        # The result list is a list of lists because of the MySQL driver. This
+        # turns it into a normal string list.
+        {:ok, Enum.map(groups, &(List.first &1))}
     end
   end
 
@@ -161,7 +176,7 @@ defmodule BADS.Groups do
   end
 
   ## Private functions for logic
-  @def "Filters to the groups specified in configuration and updates MariaDB"
+  @def "Filters to the groups found in phpBB and updates MariaDB"
   def update_groups(groups, filters) do
     import Enum
     groups
