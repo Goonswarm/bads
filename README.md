@@ -1,5 +1,6 @@
 Bad Account Database Synchroniser
 =================================
+[![Build status](https://travis-ci.org/Goonswarm/bads.svg?branch=master)](https://travis-ci.org/Goonswarm/bads)
 
 This tool synchronises the GoonSwarm account database from LDAP to various bad
 tools that keep their own account databases, currently our phpBB forums.
