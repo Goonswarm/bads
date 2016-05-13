@@ -126,7 +126,7 @@ defmodule BADS.Groups do
   def get_groups(conn) do
     search = [base: LDAP.base_dn(:groups),
               filter: :eldap.equalityMatch('objectClass', 'groupOfNames'),
-              scope: :eldap.singleLevel,
+              scope: :eldap.wholeSubtree,
               attributes: ['cn', 'member']]
     {:ok, result} = :eldap.search(conn, search)
 
