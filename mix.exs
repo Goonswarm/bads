@@ -16,7 +16,6 @@ defmodule BADS.Mixfile do
   end
 
   defp deps do
-    [{:mysql, git: "https://github.com/mysql-otp/mysql-otp", ref: "20e258371"},
-     {:exrm, "~> 1.0.4"}]
+    [{:mysql, git: "https://github.com/mysql-otp/mysql-otp", ref: "20e258371"}]
   end
 end

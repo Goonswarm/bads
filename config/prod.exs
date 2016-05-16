@@ -16,6 +16,6 @@ config :bads, :phpbb,
   host: 'forum',
   database: 'phpbb3',
   user: 'phpbb',
-  password: {:system, "MARIADB_PASSWORD"},
+  password: :os.getenv('MARIADB_PASSWORD'),
   keepalive: true,
   name: {:local, :phpbb_db}

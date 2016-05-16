@@ -13,7 +13,5 @@ config :bads, :phpbb,
   database: 'phpbb3',
   user: 'phpbb',
   keepalive: true,
-  password: {:system, "MARIADB_PASSWORD"},
-  name: {:local, :phpbb_db},
-  # Which groups to sync to LDAP
-  groups: ["admin", "capswarm", "it"]
+  password: :os.getenv('MARIADB_PASSWORD'),
+  name: {:local, :phpbb_db}

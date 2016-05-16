@@ -9,6 +9,6 @@ ENV MIX_ENV prod
 ADD . /opt/bads
 WORKDIR /opt/bads
 
-RUN mix do deps.get, deps.compile, compile, release
+RUN mix do deps.get, deps.compile, compile
 
-CMD /opt/bads/rel/bads/bin/bads foreground
+CMD mix run
