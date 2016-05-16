@@ -11,4 +11,4 @@ WORKDIR /opt/bads
 
 RUN mix do deps.get, deps.compile, compile
 
-CMD mix run
+CMD mix run --no-halt
