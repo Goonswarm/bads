@@ -1,19 +1,21 @@
 use Mix.Config
 
+# Logger configuration
+config :logger,
+  level: :info
+
 # LDAP configuration
 config :bads, :ldap,
-  host: 'localhost',
-  port: 3389
+  host: 'goon-ldap',
+  port: 389
 
 # phpBB target configuration
 # Note that the MySQL driver users Erlang strings
 config :bads, :phpbb,
-  interval: 5,
-  host: '127.0.0.1',
+  interval: 30,
+  host: 'forum',
   database: 'phpbb3',
   user: 'phpbb',
-  keepalive: true,
   password: {:system, "MARIADB_PASSWORD"},
-  name: {:local, :phpbb_db},
-  # Which groups to sync to LDAP
-  groups: ["admin", "capswarm", "it"]
+  keepalive: true,
+  name: {:local, :phpbb_db}
