@@ -82,10 +82,25 @@ defmodule BADS.Groups do
     |> Enum.map(fn([user]) -> user end)
   end
 
+  @doc """
+  phpBB caches user permissions seemingly forever. This query purges them and
+  should let users see the new forums instantly.
+  """
+  def phpbb_clear_permissions_cache(uid) do
+    query = """
+    UPDATE phpbb_users
+    SET user_permissions = ''
+    WHERE user_id = ?
+    """
+
+    :ok = :mysql.query(:phpbb_db, query, [uid])
+  end
+
   @doc "Add some users to a group"
   def phpbb_add_members(group, members) do
     {:ok, gid} = phpbb_group_id(group)
     members = ldap_user_ids(members)
+
     query = """
     INSERT INTO phpbb_user_group
     VALUES (?, ?, ?, ?)
@@ -94,6 +109,7 @@ defmodule BADS.Groups do
     Enum.map(members, fn({user, uid}) ->
       Logger.info("[phpbb] Adding #{user} to group #{group}")
       :ok = :mysql.query(:phpbb_db, query, [gid, uid, 0, 0])
+      phpbb_clear_permissions_cache(uid)
     end)
   end
 
@@ -110,6 +126,7 @@ defmodule BADS.Groups do
     Enum.map(members, fn({user, uid}) ->
       Logger.info("[phpbb] Removing #{user} from group #{group}")
       :ok = :mysql.query(:phpbb_db, query, [gid, uid])
+      phpbb_clear_permissions_cache(uid)
     end)
   end
 
